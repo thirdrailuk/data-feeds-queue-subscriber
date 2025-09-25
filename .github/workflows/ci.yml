@@ -1,52 +1,41 @@
 name: CI
 
 on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+    push:
+        branches: [ main ]
+    pull_request:
+        branches: [ main ]
 
 jobs:
-  build:
-    name: "CI"
+    tests:
+        runs-on: ubuntu-latest
 
-    runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.experimental }}
+        strategy:
+            fail-fast: true
+            matrix:
+                php-version: [ 8.2 ]
 
-    strategy:
-      matrix:
-        php-version:
-          - "8.1"
-        dependencies: [locked]
-        os: [ubuntu-latest]
-        experimental: [false]
+        name: PHP ${{ matrix.php-version }}
 
-    steps:
-      - name: "Checkout"
-        uses: actions/checkout@v2
+        steps:
+            -   name: "Checkout"
+                uses: "actions/checkout@v4"
 
-      - name: "Cache dependencies"
-        uses: actions/cache@v1
-        with:
-          path: ~/.composer/cache/files
-          key: dependencies-php-${{ matrix.php-version }}-composer-${{ hashFiles('composer.json') }}
+            -   name: "Install PHP - ${{ matrix.php-version }}"
+                uses: "shivammathur/setup-php@2.29.0"
+                with:
+                    coverage: none
+                    php-version: "${{ matrix.php-version }}"
+                    extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, gd, redis, memcached, rdkafka
+                    ini-values: memory_limit=-1
 
-      - name: "Install PHP"
-        uses: "shivammathur/setup-php@v2"
-        with:
-          coverage: "none"
-          php-version: "${{ matrix.php-version }}"
+            -   name: Validate composer.json and composer.lock
+                run: composer validate
 
-      - name: Validate composer.json and composer.lock
-        run: composer validate
+            -   name: "Install dependencies"
+                uses: "ramsey/composer-install@2.2.0"
+                with:
+                    dependency-versions: "${{ matrix.dependencies }}"
 
-      - name: Install dependencies
-        run: composer install --prefer-dist --no-interaction --optimize-autoloader
-
-      - name: Run test suite
-        env:
-          NETWORKRAIL_HOST: ${{ secrets.NETWORKRAIL_HOST }}
-          NETWORKRAIL_PORT: ${{ secrets.NETWORKRAIL_PORT }}
-          NETWORKRAIL_USERNAME: ${{ secrets.NETWORKRAIL_USERNAME }}
-          NETWORKRAIL_PASSWORD: ${{ secrets.NETWORKRAIL_PASSWORD }}
-        run: composer test
+            -   name: Run test suite
+                run: composer test

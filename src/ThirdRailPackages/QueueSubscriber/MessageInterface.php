@@ -1,6 +1,6 @@
 <?php
 
-namespace ThirdRailPackages\QueueSubscriber\Stomp;
+namespace ThirdRailPackages\QueueSubscriber;
 
 interface MessageInterface
 {

@@ -1,7 +1,5 @@
 <?php
 
-use Stomp\Network\Connection;
-
 include __DIR__ . '/../vendor/autoload.php';
 
 date_default_timezone_set('UTC');
@@ -9,125 +7,55 @@ date_default_timezone_set('UTC');
 $dotenv = Dotenv\Dotenv::createUnsafeImmutable(__DIR__ . '/../');
 $dotenv->safeLoad();
 
-function nationalrail_host()
+function rdg_bootstrap_servers()
 {
-    return getenv('NATIONALRAIL_HOST');
+    return getenv('RDG_BOOTSTRAP_SERVERS');
 }
 
-function nationalrail_port()
+function rdg_username()
 {
-    return getenv('NATIONALRAIL_PORT');
+    return getenv('RDG_USERNAME');
 }
 
-function nationalrail_username()
+function rdg_password()
 {
-    return getenv('NATIONALRAIL_USERNAME');
+    return getenv('RDG_PASSWORD');
 }
 
-function nationalrail_password()
+function rdg_group_id_trust()
 {
-    return getenv('NATIONALRAIL_PASSWORD');
+    return getenv('RDG_GROUP_ID_TRUST');
 }
 
-function nationalrail_topic()
+function rdg_group_id_td()
 {
-    return getenv('NATIONALRAIL_TOPIC');
+    return getenv('RDG_GROUP_ID_TD');
 }
 
-function nationalrail_simple_client(string $clientId, string $subscriptionKey)
+function rdg_group_id_vstp()
 {
-    if (strlen($subscriptionKey) === 0) {
-        throw new \Exception('Please provide a custom subscription key');
-    }
+    return getenv('RDG_GROUP_ID_TD');
+}
 
-    $client = \ThirdRailPackages\QueueSubscriber\Stomp\StompClientFactory::make(
-        nationalrail_host(),
-        nationalrail_port(),
-        nationalrail_username(),
-        nationalrail_password(),
-        nationalrail_client_id($clientId),
-        0,
-        0,
-    );
+function rdg_group_id_gemini()
+{
+    return getenv('RDG_GROUP_ID_GEMINI');
+}
 
-    return new \ThirdRailPackages\QueueSubscriber\Stomp\DurableSubscription(
-        $client,
-        networkrail_durable_subscription_name($subscriptionKey)
+function rdg_client(string $groupId): \ThirdRailPackages\QueueSubscriber\Kafka\Subscription {
+    return \ThirdRailPackages\QueueSubscriber\Kafka\KafkaClientFactory::make(
+        rdg_bootstrap_servers(),
+        rdg_username(),
+        rdg_password(),
+        $groupId
     );
 }
 
-function networkrail_host()
+function milli_date(int $timestamp)
 {
-
-    return getenv('NETWORKRAIL_HOST');
-}
-
-function networkrail_port()
-{
-    return getenv('NETWORKRAIL_PORT');
-}
-
-function networkrail_username()
-{
-    return getenv('NETWORKRAIL_USERNAME');
-}
-
-function networkrail_password()
-{
-    return getenv('NETWORKRAIL_PASSWORD');
-}
-
-
-function networkrail_simple_client(string $clientId, string $subscriptionKey): \ThirdRailPackages\QueueSubscriber\Stomp\DurableSubscription
-{
-    if (strlen($subscriptionKey) === 0) {
-        throw new \Exception('Please provide a custom subscription key');
-    }
-
-    $client = \ThirdRailPackages\QueueSubscriber\Stomp\StompClientFactory::make(
-        networkrail_host(),
-        networkrail_port(),
-        networkrail_username(),
-        networkrail_password(),
-        network_rail_client_id($clientId),
-        0,
-        0,
-    );
-
-    return new \ThirdRailPackages\QueueSubscriber\Stomp\DurableSubscription(
-        $client,
-        networkrail_durable_subscription_name($subscriptionKey)
-    );
-}
-
-function networkrail_durable_subscription_name($feed)
-{
-    $feed = str_replace('/topic/', '', $feed);
-
-    return sprintf(
-        'third-rail-packages-queue-subscriber_%s_development',
-        strtolower($feed)
-    );
-}
-
-function network_rail_client_id(string $identifier): string
-{
-    return sprintf(
-        "%s-%s-%s",
-        'third_rail_packages_queue_subscriber_dev',
-        networkrail_username(),
-        $identifier
-    );
-}
-
-function nationalrail_client_id(string $identifier): string
-{
-    return sprintf(
-        "%s-%s-%s",
-        nationalrail_username(),
-        'third_rail_packages_queue_subscriber_dev',
-        $identifier
-    );
+    return (new \DateTimeImmutable())
+        ->setTimezone(new \DateTimeZone('Europe/London'))
+        ->setTimestamp((int)($timestamp / 1000));
 }
 
 function hexagonal_to_binary($hexadecimal)
@@ -151,24 +79,3 @@ function datetime_from_milliseconds(int $milliseconds)
     return $utcDate->setTimezone(new DateTimeZone('Europe/London'));
 }
 
-function format_datetime_from_milliseconds($milliseconds)
-{
-    return datetime_from_milliseconds(
-        floor($milliseconds / 1000)
-    )->format('Y-m-d H:i:s');
-}
-
-function random_string(
-    int $length = 64,
-    string $keyspace = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-): string {
-    if ($length < 1) {
-        throw new \RangeException("Length must be a positive integer");
-    }
-    $pieces = [];
-    $max = mb_strlen($keyspace, '8bit') - 1;
-    for ($i = 0; $i < $length; ++$i) {
-        $pieces []= $keyspace[random_int(0, $max)];
-    }
-    return implode('', $pieces);
-}
