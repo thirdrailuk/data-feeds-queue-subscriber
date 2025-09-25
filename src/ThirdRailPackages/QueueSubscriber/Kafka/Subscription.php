@@ -4,9 +4,10 @@ namespace ThirdRailPackages\QueueSubscriber\Kafka;
 
 use RdKafka\Conf;
 use RdKafka\KafkaConsumer;
+use ThirdRailPackages\QueueSubscriber\ConsumerInterface;
 use Throwable;
 
-class Subscription
+class Subscription implements ConsumerInterface
 {
     public bool $looping = false;
 

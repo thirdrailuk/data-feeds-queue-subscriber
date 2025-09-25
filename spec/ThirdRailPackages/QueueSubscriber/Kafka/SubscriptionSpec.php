@@ -3,6 +3,7 @@
 namespace spec\ThirdRailPackages\QueueSubscriber\Kafka;
 
 use PhpSpec\ObjectBehavior;
+use ThirdRailPackages\QueueSubscriber\ConsumerInterface;
 use ThirdRailPackages\QueueSubscriber\Kafka\Subscription;
 
 class SubscriptionSpec extends ObjectBehavior
@@ -11,5 +12,6 @@ class SubscriptionSpec extends ObjectBehavior
     {
         $this->beConstructedWith($client);
         $this->shouldHaveType(Subscription::class);
+        $this->shouldImplement(ConsumerInterface::class);
     }
 }
