@@ -5,12 +5,9 @@ namespace ThirdRailPackages\QueueSubscriber;
 interface MessageInterface
 {
     /**
-     * @return array<string>
+     * @return array<string, int|string|null>
      */
     public function getHeaders(): array;
 
-    /**
-     * @return false|string
-     */
-    public function getBody();
+    public function getBody(): ?string;
 }
