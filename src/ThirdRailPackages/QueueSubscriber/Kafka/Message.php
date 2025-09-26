@@ -12,11 +12,14 @@ class Message implements MessageInterface
     }
 
     /**
-     * @return array|string[]
+     * @return array<string, int|string|null>
      */
     public function getHeaders(): array
     {
-        return $this->frame->headers;
+        $headers              = $this->frame->headers;
+        $headers['timestamp'] = $this->frame->timestamp;
+
+        return $headers;
     }
 
     public function getBody(): ?string
